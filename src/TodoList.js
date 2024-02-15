@@ -2,13 +2,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Web3 from 'web3';
 
-const TodoList = ({ contract }) => {
+const TodoList = () => {
     const [web3, setWeb3] = useState(null);
     const [accounts, setAccounts] = useState([]);
     const [todoContent, setTodoContent] = useState('');
     const [todoList, setTodoList] = useState([]);
     const [filter, setFilter] = useState('all'); // État initial pour afficher toutes les tâches
-
 
     useEffect(() => {
         const init = async () => {
@@ -16,8 +15,14 @@ const TodoList = ({ contract }) => {
                 const web3Instance = new Web3(window.ethereum);
                 setWeb3(web3Instance);
 
-                const accounts = await web3Instance.eth.getAccounts();
-                setAccounts(accounts);
+                try {
+                    // Request account access if needed
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const accounts = await web3Instance.eth.getAccounts();
+                    setAccounts(accounts);
+                } catch (error) {
+                    console.error('User rejected account access');
+                }
             } else {
                 console.error('MetaMask non détecté');
             }
@@ -545,6 +550,7 @@ const TodoList = ({ contract }) => {
         }
     };
 
+
     let filteredTodoList = todoList;
 
     if (filter === 'done') {
@@ -556,11 +562,26 @@ const TodoList = ({ contract }) => {
     return (
         <div>
             <h1>Todo List</h1>
+            {accounts.length > 0 ? (
+                <div>
+                    <p>Connected Metamask - Wallet: {accounts[0]}</p>
+                </div>
+            ) : (
+                <div>
+                <button onClick={() => window.ethereum.request({ method: 'eth_requestAccounts' })}>
+                        Connect Metamask
+                    </button>
+                    <p>No wallet connected</p>
+                </div>
+            )}
+            {accounts.length > 0 && (
             <div>
                 <button onClick={() => setFilter('all')}>All</button>
                 <button onClick={() => setFilter('done')}>Done</button>
                 <button onClick={() => setFilter('notDone')}>Not Done</button>
             </div>
+            )}
+            {accounts.length > 0 && (
             <div>
                 <input
                     type="text"
@@ -570,12 +591,13 @@ const TodoList = ({ contract }) => {
                 />
                 <button onClick={handleCreateTask}>Ajouter</button>
             </div>
+            )}
             <ul>
                 {filteredTodoList.map((task) => (
                     <li key={task.id}>
                         <input type="checkbox" checked={task.completed}
                                onChange={() => handleToggleCompleted(task.id)}/>
-                        <span >{task.content}</span>
+                        <span>{task.content}</span>
                         {task.completed ? <span> - Done</span> : <span> - Not Done</span>}
                     </li>
                 ))}
