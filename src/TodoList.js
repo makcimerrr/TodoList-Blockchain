@@ -7,6 +7,8 @@ const TodoList = ({ contract }) => {
     const [accounts, setAccounts] = useState([]);
     const [todoContent, setTodoContent] = useState('');
     const [todoList, setTodoList] = useState([]);
+    const [filter, setFilter] = useState('all'); // État initial pour afficher toutes les tâches
+
 
     useEffect(() => {
         const init = async () => {
@@ -543,9 +545,22 @@ const TodoList = ({ contract }) => {
         }
     };
 
+    let filteredTodoList = todoList;
+
+    if (filter === 'done') {
+        filteredTodoList = todoList.filter(task => task.completed);
+    } else if (filter === 'notDone') {
+        filteredTodoList = todoList.filter(task => !task.completed);
+    }
+
     return (
         <div>
             <h1>Todo List</h1>
+            <div>
+                <button onClick={() => setFilter('all')}>All</button>
+                <button onClick={() => setFilter('done')}>Done</button>
+                <button onClick={() => setFilter('notDone')}>Not Done</button>
+            </div>
             <div>
                 <input
                     type="text"
@@ -556,10 +571,11 @@ const TodoList = ({ contract }) => {
                 <button onClick={handleCreateTask}>Ajouter</button>
             </div>
             <ul>
-                {todoList.map((task) => (
+                {filteredTodoList.map((task) => (
                     <li key={task.id}>
-                        <input type="checkbox" checked={task.completed} onChange={() => handleToggleCompleted(task.id)} />
-                        <span>{task.content}</span>
+                        <input type="checkbox" checked={task.completed}
+                               onChange={() => handleToggleCompleted(task.id)}/>
+                        <span >{task.content}</span>
                         {task.completed ? <span> - Done</span> : <span> - Not Done</span>}
                     </li>
                 ))}
